@@ -9,15 +9,29 @@ class NovelSpider(scrapy.Spider):
     # 爬虫名
     name = 'novel_spider'
     # 允许的域名
-    allowed_domains = ['http://hao123.zongheng.com']
+    allowed_domains = ['http://www.danmeila.com']
     # 入口url 扔到调度器里面去
-    start_urls = ['http://hao123.zongheng.com/book/1/189169.html']
+    start_urls = ['http://www.danmeila.com/chapter/20180406/29649.html']
 
     def parse(self, response):
-        movieList = response.xpath('//*[@id="ct"]/div/div[2]/div/div[2]/div/div[6]/div[2]/ul/li')
+        movieList = response.xpath('//*[@id="container"]/div[3]/div[2]/div[2]/div/div/ul/li')
+        novelContent = NovelItem()
         for item in movieList:
-            testItem = NovelItem()
-            testItem['title'] = item.xpath('.//a/@title').extract_first()
-            
+            u = 'http://www.danmeila.com' + item.xpath('.//a/@href').extract_first()
+            # print(u)
+            # novelContent['title'] = 'http://www.danmeila.com' + item.xpath('.//a/@href').extract_first()    
+
+            # yield novelContent
+            # self.start_urls.append('http://www.danmeila.com' + item.xpath('.//a/@href').extract_first())
+            yield scrapy.Request(u, callback = self.content_a, meta= novelContent)
             # 放到管道里否则 pipeline获取不到
-            yield testItem
+
+
+    def content_a(self, response):
+        print(11)
+        novelContent = response.meta
+        
+        novelContent['title'] = response.xpath('//*[@id="J_article"]/div[1]/h1/text()').extract_first()    
+        # novelContent['content'] = response.xpath('//*[@id="J_article_con"]/text()').extract_first()
+
+        yield novelContent
